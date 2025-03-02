@@ -1,10 +1,9 @@
 package com.bakirwebservice.invoiceservice.service;
 
-import com.bakirwebservice.invoiceservice.api.request.CreateInvoiceRequest;
 import com.bakirwebservice.invoiceservice.api.request.InvoiceRequest;
+import com.bakirwebservice.invoiceservice.api.response.InvoiceResponse;
 
 public interface IInvoiceProducerService {
-    InvoiceRequest createInvoiceRequest(CreateInvoiceRequest createInvoiceRequest);
 
-
+    InvoiceResponse createInvoiceRequest(InvoiceRequest invoiceRequest);
 }

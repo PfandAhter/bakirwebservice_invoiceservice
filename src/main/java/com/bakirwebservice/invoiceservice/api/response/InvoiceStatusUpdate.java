@@ -1,7 +1,7 @@
 package com.bakirwebservice.invoiceservice.api.response;
 
 
-import com.bakirwebservice.invoiceservice.model.InvoiceStatus;
+import com.bakirwebservice.invoiceservice.model.enums.InvoiceStatus;
 import lombok.Getter;
 import lombok.Setter;
 

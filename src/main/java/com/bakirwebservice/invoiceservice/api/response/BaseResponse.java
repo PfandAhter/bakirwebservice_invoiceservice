@@ -3,7 +3,6 @@ package com.bakirwebservice.invoiceservice.api.response;
 
 import com.bakirwebservice.invoiceservice.constants.ErrorCodeConstants;
 import com.bakirwebservice.invoiceservice.constants.ResponseStatus;
-import com.bakirwebservice.invoiceservice.model.MessageList;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.AllArgsConstructor;

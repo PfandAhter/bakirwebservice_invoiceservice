@@ -2,7 +2,9 @@ package com.bakirwebservice.invoiceservice.service.invoice;
 
 
 import com.bakirwebservice.invoiceservice.api.request.InvoiceRequest;
+import com.bakirwebservice.invoiceservice.model.enums.InvoiceType;
 import com.bakirwebservice.invoiceservice.model.PDFContentData;
+import com.bakirwebservice.invoiceservice.model.entity.PurchaseInvoice;
 import com.bakirwebservice.invoiceservice.service.IInvoiceConsumerService;
 import com.bakirwebservice.invoiceservice.service.cache.DistributedCacheService;
 import com.bakirwebservice.invoiceservice.service.pdf.PDFEncryptionServiceImpl;
@@ -10,7 +12,6 @@ import com.bakirwebservice.invoiceservice.service.pdf.PDFGeneratorService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -26,16 +27,19 @@ public class InvoiceConsumerService implements IInvoiceConsumerService {
 
     private final DistributedCacheService cacheService;
 
+    private final InvoiceFactory invoiceFactory;
+
     private static final String TOPIC = "invoice-service";
 
     @Override
     @KafkaListener(topics = TOPIC,
-            groupId = "invoice",
+            groupId = "invoice-processor-group",
             containerFactory = "invoiceKafkaListenerContainerFactory")
     public void consumeInvoice(InvoiceRequest invoiceRequest){
         try {
             log.info("Consumed invoice: {}", invoiceRequest);
-            byte[] pdf = generatorService.generateInvoicePDF(invoiceRequest.getInvoice());
+            byte[] pdf = invoiceFactory.createInvoice(invoiceRequest);
+
             PDFEncryptionServiceImpl.EncryptedData data = encryptionService.encryptPDF(pdf,invoiceRequest.getPassword());
             PDFContentData contentData = new PDFContentData(data.data(), data.salt());
             cacheService.cachePDF(invoiceRequest.getRequestId(),contentData);

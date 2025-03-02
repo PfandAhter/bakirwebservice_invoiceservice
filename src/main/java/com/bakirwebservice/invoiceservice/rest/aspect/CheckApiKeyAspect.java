@@ -21,7 +21,7 @@ public class CheckApiKeyAspect {
         Object [] parameters = joinPoint.getArgs();
         for(Object param : parameters){
             if(param instanceof BaseRequest baseRequest){
-                // apikeyi decrpyt etmemiz laazim burada...
+                // TODO:apikeyi decrpyt etmemiz laazim burada...
 
                 if(baseRequest.getApikey() == null || !baseRequest.getApikey().equals("123456")){
                     throw new IllegalArgumentException("API Key is not valid");

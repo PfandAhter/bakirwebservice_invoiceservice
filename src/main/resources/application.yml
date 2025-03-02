@@ -1,30 +1,43 @@
 cache:
   config:
     entryTtl: 60
-    categoryList:
+    pdfList:
       entryTtl: 30
 
 encryption:
-  pepper:
+  pepper: "YOUR-PEPPER-HERE"
 
 spring:
+  datasource:
+    username: springstudent
+    password: springstudent
+    url: jdbc:mysql://localhost:3306/invoice_service
+  jpa:
+    hibernate:
+      ddl-auto: update
   kafka:
-    bootstrap-servers: localhost:9092
     producer:
+      bootstrap-servers: localhost:9092
+      group-id: invoice-processor-group
+      auto-offset-reset: earliest
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
     consumer:
-      group-id: pdf-processor-group
+      bootstrap-servers: localhost:9092
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      properties:
-        spring.json.trusted.packages: "*"
   cache:
     type: redis
+  application:
+    name: invoiceservice
+  main:
+    banner-mode: off
+  data:
     redis:
       host: localhost
       port: 6379
-  application:
-    name: invoiceservice
+      timeout: 5000
+      password: #YOUR-PASSWORD-HERE
+
 server:
-  port: 8050 #TODO check is 8050 is available
+  port: 8050

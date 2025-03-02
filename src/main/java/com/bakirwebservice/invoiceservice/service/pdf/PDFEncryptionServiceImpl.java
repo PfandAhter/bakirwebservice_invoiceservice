@@ -29,7 +29,7 @@ public class PDFEncryptionServiceImpl implements IPDFEncryptionService {
 
     private static final int SALT_LENGTH = 32;
 
-    private static final int IV_LENGTH = 8;
+    private static final int IV_LENGTH = 16;
 
     private static final String PASSWORD_PATTERN = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{8,}$";
 
@@ -51,7 +51,8 @@ public class PDFEncryptionServiceImpl implements IPDFEncryptionService {
             Cipher cipher = Cipher.getInstance(ALGORITHM);
             cipher.init(Cipher.ENCRYPT_MODE,key);
 
-            byte[] iv = cipher.getIV();
+            byte[] iv= new byte[IV_LENGTH];
+            iv = cipher.getIV();
             byte[] encryptedContent = cipher.doFinal(pdfContent);
             ByteBuffer byteBuffer = ByteBuffer.allocate(IV_LENGTH + encryptedContent.length);
             byteBuffer.put(iv);

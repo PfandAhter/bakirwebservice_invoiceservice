@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,23 +32,31 @@ public class PDFGeneratorService {
         try{
             PdfWriter.getInstance(document, byteArrayOutputStream);
             document.open();
+
+            log.info("invoiceItemHandlers: {}", invoiceItemHandlers);
             InvoiceItem handler = invoiceItemHandlers.get(invoice.getClass());
 
             if(handler == null){
                 throw new IllegalArgumentException("Unsupported invoice type: " + invoice.getClass().getSimpleName());
             }
 
-            handler.addInvoiceHeader(document,invoice);
-            handler.addInvoiceItems(document,invoice);
-            handler.addInvoiceTotal(document,invoice);
+            handler.createInvoice(document,invoice);
 
-            return byteArrayOutputStream.toByteArray();
+            /*handler.addInvoiceHeader(document,invoice);
+            handler.addInvoiceItems(document,invoice);
+            handler.addInvoiceTotal(document,invoice);*/
+
         }catch (DocumentException e){
             log.error("Error generating PDF for invoice {}: {}", invoice.getInvoiceNumber(), e.getMessage());
             throw e;
-        }finally {
+        } catch (IOException e) {
+            log.error("Error generating PDF for invoice {}: {}", invoice.getInvoiceNumber(), e.getMessage());
+            throw new RuntimeException(e);
+        } finally {
             document.close();
         }
+        log.info("Document generated, Byte length: {}",byteArrayOutputStream.size());
+        return byteArrayOutputStream.toByteArray();
     }
 
     public void registerInvoiceHandler(Class<? extends Invoice> invoiceClass, InvoiceItem handler){
