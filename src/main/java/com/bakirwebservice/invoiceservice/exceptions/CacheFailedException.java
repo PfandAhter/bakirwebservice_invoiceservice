@@ -2,15 +2,10 @@ package com.bakirwebservice.invoiceservice.exceptions;
 
 import lombok.Getter;
 
-public class CacheFailedException extends RuntimeException{
+public class CacheFailedException extends BusinessException{
 
     @Getter
     private String message;
-
-    public CacheFailedException(){
-        super();
-        this.message = null;
-    }
 
     public CacheFailedException(String message){
         super(message);

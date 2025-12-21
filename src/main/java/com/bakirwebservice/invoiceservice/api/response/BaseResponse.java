@@ -17,24 +17,15 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonPropertyOrder({
-        "Statu",
-        "Islemkodu",
-        "IslemMesaji"
-        //"IslemSonucu"
-})
-
 public class BaseResponse {
 
-    @JsonProperty("Statu")
     private String status = ResponseStatus.SUCCESS_CODE;
 
-    @JsonProperty("IslemKodu")
     private String processCode = ErrorCodeConstants.SUCCESS;
 
-    @JsonProperty("IslemMesaji")
     private String processMessage =  ResponseStatus.SUCCESS;
 
-    /*@JsonProperty(value = "IslemSonucu", required = false)
-    private List<MessageList> messageList = new ArrayList<>();*/
+    public BaseResponse(String processMessage){
+        this.processMessage = processMessage;
+    }
 }

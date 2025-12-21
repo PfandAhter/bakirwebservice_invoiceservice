@@ -1,10 +1,9 @@
-package com.bakirwebservice.invoiceservice.rest.aspect;
+package com.bakirwebservice.invoiceservice.aspect;
 
 
 import com.bakirwebservice.invoiceservice.model.EncryptedPDF;
 import com.bakirwebservice.invoiceservice.model.PDFContentData;
 import com.bakirwebservice.invoiceservice.repository.EncryptedPDFRepository;
-import com.bakirwebservice.invoiceservice.service.ICacheService;
 import com.bakirwebservice.invoiceservice.service.cache.DistributedCacheService;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
@@ -25,24 +24,27 @@ import java.util.Optional;
 
 public class ServiceSetupAspect {
 
-    private final ICacheService cacheService;
-
     private final DistributedCacheService distributedCacheService;
 
     private final EncryptedPDFRepository encryptedPDFRepository;
 
     @EventListener(ApplicationReadyEvent.class)
     public void serviceReady(){
-        cacheService.getErrorCodes();
+        cacheEncryptedPDFS();
     }
 
     @PreDestroy
     public void serviceStop(){
+        log.info("Service is stopping...");
         saveCachedEncryptedPDF();
-        cacheEncryptedPDFS();
     }
 
-
+    /*@PostConstruct
+    public void init() { // Bu docker containeri kapatildiginda calisacak
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            saveCachedEncryptedPDF();
+        }));
+    }*/
 
     private void saveCachedEncryptedPDF(){
         Map<String, PDFContentData> dataHashMap = distributedCacheService.getAllPDF();
