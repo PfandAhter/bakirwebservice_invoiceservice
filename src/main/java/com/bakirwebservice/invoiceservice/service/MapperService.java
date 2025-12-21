@@ -2,7 +2,7 @@ package com.bakirwebservice.invoiceservice.service;
 
 import java.util.List;
 
-public interface IMapperService {
+public interface MapperService {
 
     <T,D> List<D> map(List<T> source, Class<D> destination);
 

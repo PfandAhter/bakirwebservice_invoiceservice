@@ -12,11 +12,12 @@ public class InvoiceWebSocketController {
     @MessageMapping("/invoice-status")
     @SendTo("/topic/status-updates")
     public InvoiceStatusUpdate sendStatusUpdate(InvoiceRequest request){
-        return new InvoiceStatusUpdate(
+        /*return new InvoiceStatusUpdate(
                 request.getRequestId(),
                 request.getStatus(),
                 request.getEstimatedCompletionTime()
-        );
+        );*/
+        return null;
     }
 
 }

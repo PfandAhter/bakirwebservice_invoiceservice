@@ -1,18 +1,17 @@
 package com.bakirwebservice.invoiceservice.service.invoice;
 
 
-import com.bakirwebservice.invoiceservice.api.request.CreateInvoiceRequest;
 import com.bakirwebservice.invoiceservice.api.request.InvoiceRequest;
-import com.bakirwebservice.invoiceservice.model.InvoiceStatus;
-import com.bakirwebservice.invoiceservice.model.entity.Invoice;
+import com.bakirwebservice.invoiceservice.api.response.InvoiceResponse;
+import com.bakirwebservice.invoiceservice.model.enums.InvoiceStatus;
 import com.bakirwebservice.invoiceservice.service.IInvoiceProducerService;
-import com.bakirwebservice.invoiceservice.service.IPDFEncryptionService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -25,26 +24,19 @@ public class InvoiceProducerServiceImpl implements IInvoiceProducerService {
 
     private final LoadEstimatorService loadEstimatorService;
 
-    private final IPDFEncryptionService encryptionService;
-
     @Override
-    public InvoiceRequest createInvoiceRequest(CreateInvoiceRequest createInvoiceRequest){
-        LocalDateTime now = LocalDateTime.now();
-        String requestId = "TEST"; // TODO CHANGE IT...
+    public InvoiceResponse createInvoiceRequest(InvoiceRequest invoiceRequest){
+        String requestId = UUID.randomUUID().toString(); // TODO CHANGE IT...
+        LocalDateTime estimatedCompletionTime = loadEstimatorService.estimateCompletionTime();
+        invoiceRequest.setRequestId(requestId);
 
-        InvoiceRequest request = new InvoiceRequest();
-
-        request.setRequestId(requestId);
-        request.setInvoice(createInvoiceRequest.getInvoice());
-        request.setRequestTime(now);
-        request.setPassword(createInvoiceRequest.getPassword());
-        request.setStatus(InvoiceStatus.PENDING);
-        request.setEstimatedCompletionTime(loadEstimatorService.estimateCompletionTime());
-
-        kafkaTemplate.send(TOPIC, request);
-
-        log.info("Invoice request sent to Kafka: " + request.getRequestId() + " Estimated completion time: " + request.getEstimatedCompletionTime());
-        return request;
+        kafkaTemplate.send(TOPIC, invoiceRequest);
+        log.info("Invoice request sent to Kafka: " + invoiceRequest.getRequestId() + " Estimated completion time: " + estimatedCompletionTime);
+        return InvoiceResponse.builder()
+                .invoiceType(invoiceRequest.getInvoiceType())
+                .requestTime(invoiceRequest.getInvoiceRequestedDate())
+                .estimatedCompletionDate(estimatedCompletionTime)
+                .invoiceStatus(InvoiceStatus.PENDING)
+                .requestId(requestId).build();
     }
-
 }

@@ -1,6 +1,6 @@
 package com.bakirwebservice.invoiceservice.api.response;
 
-import com.bakirwebservice.invoiceservice.model.InvoiceStatus;
+import com.bakirwebservice.invoiceservice.model.enums.InvoiceStatus;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,7 +12,7 @@ public class CreateInvoicePDFResponse extends BaseResponse{
 
     private String requestId;
 
-    private InvoiceStatus status;
+    private InvoiceStatus invoiceStatus;
 
     private LocalDateTime estimatedCompletionTime;
 

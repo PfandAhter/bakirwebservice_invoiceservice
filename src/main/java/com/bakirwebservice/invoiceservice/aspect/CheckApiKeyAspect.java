@@ -1,4 +1,4 @@
-package com.bakirwebservice.invoiceservice.rest.aspect;
+package com.bakirwebservice.invoiceservice.aspect;
 
 
 import com.bakirwebservice.invoiceservice.api.request.BaseRequest;
@@ -16,16 +16,16 @@ import org.springframework.stereotype.Component;
 
 public class CheckApiKeyAspect {
 
-    @Before(value = "execution(* com.bakirwebservice.invoiceservice.rest.api.InvoiceControllerApi..*(..))")
+    @Before(value = "execution(* com.bakirwebservice.invoiceservice.api.InvoiceControllerApi..*(..))")
     public void checkApiKey(JoinPoint joinPoint) {
         Object [] parameters = joinPoint.getArgs();
         for(Object param : parameters){
             if(param instanceof BaseRequest baseRequest){
-                // apikeyi decrpyt etmemiz laazim burada...
+                // TODO:apikeyi decrpyt etmemiz laazim burada...
 
-                if(baseRequest.getApikey() == null || !baseRequest.getApikey().equals("123456")){
+                /*if(baseRequest.getApikey() == null || !baseRequest.getApikey().equals("123456")){
                     throw new IllegalArgumentException("API Key is not valid");
-                }
+                }*/
             }
         }
     }

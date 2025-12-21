@@ -1,16 +1,17 @@
 package com.bakirwebservice.invoiceservice.rest.controller;
 
 
-import com.bakirwebservice.invoiceservice.api.request.CreateInvoiceRequest;
+import com.bakirwebservice.invoiceservice.api.request.CreatePurchaseInvoiceRequest;
+import com.bakirwebservice.invoiceservice.api.request.CreateTransactionInvoiceRequest;
+import com.bakirwebservice.invoiceservice.api.request.InvoiceRequest;
 import com.bakirwebservice.invoiceservice.api.response.CreateInvoicePDFResponse;
 import com.bakirwebservice.invoiceservice.api.response.InvoiceStatusUpdate;
-import com.bakirwebservice.invoiceservice.model.InvoiceStatus;
-import com.bakirwebservice.invoiceservice.model.PDFContentData;
+import com.bakirwebservice.invoiceservice.model.enums.InvoiceStatus;
+import com.bakirwebservice.invoiceservice.model.enums.InvoiceType;
 import com.bakirwebservice.invoiceservice.rest.api.InvoiceControllerApi;
 import com.bakirwebservice.invoiceservice.service.IInvoiceConsumerService;
 import com.bakirwebservice.invoiceservice.service.IInvoiceProducerService;
 import com.bakirwebservice.invoiceservice.service.IMapperService;
-import com.bakirwebservice.invoiceservice.service.cache.DistributedCacheService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -21,6 +22,8 @@ import org.springframework.retry.support.RetryTemplate;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.Optional;
 
 @RestController
@@ -38,21 +41,47 @@ public class InvoiceController implements InvoiceControllerApi {
 
     private final IMapperService mapperService;
 
-    private final DistributedCacheService cacheService;
-
-
     @Override
-    public ResponseEntity<CreateInvoicePDFResponse> createInvoicePDF(CreateInvoiceRequest request) {
-        return retryTemplate.execute(context -> {
-            CreateInvoicePDFResponse response = mapperService.map(producerService.createInvoiceRequest(request), CreateInvoicePDFResponse.class);
+    public ResponseEntity<CreateInvoicePDFResponse> createPurchaseInvoice(CreatePurchaseInvoiceRequest request) {
+        InvoiceRequest invoiceRequest = mapperService.map(request, InvoiceRequest.class);
+
+        HashMap<String,Object> testHm = new HashMap<>();
+        testHm.put("items",request.getInvoice().getItems());
+        invoiceRequest.setInvoiceType(request.getInvoice().getInvoiceType());
+        invoiceRequest.setPassword(request.getPassword());
+        invoiceRequest.setInvoiceRequestedDate(LocalDateTime.now());
+        invoiceRequest.setDetails(testHm);
+
+
+        CreateInvoicePDFResponse response = mapperService.map(producerService.createInvoiceRequest(invoiceRequest), CreateInvoicePDFResponse.class);
+
+        return ResponseEntity.ok(response);
+        /*return retryTemplate.execute(context -> {
+            InvoiceRequest invoiceRequest = mapperService.map(request, InvoiceRequest.class);
+            //invoiceRequest.getInvoice().setInvoiceType(InvoiceType.PURCHASE);
+
+
+            CreateInvoicePDFResponse response = mapperService.map(producerService.createInvoiceRequest(invoiceRequest), CreateInvoicePDFResponse.class);
 
             webSocket.convertAndSend(
-                    "/topic/status-updates",
+                    "/status/invoice/purchase",
                     new InvoiceStatusUpdate(response.getRequestId(), InvoiceStatus.PENDING)
             );
 
             return ResponseEntity.ok(response);
-        });
+        });*/
+    }
+
+    @Override
+    public ResponseEntity<CreateInvoicePDFResponse> createTransactionInvoice(CreateTransactionInvoiceRequest createTransactionInvoiceRequest) {
+        return null;
+    }
+
+    @Override
+    public ResponseEntity<CreateInvoicePDFResponse> testCreateInvoice(InvoiceRequest invoiceRequest) {
+
+
+        return null;
     }
 
     @Override
@@ -77,4 +106,5 @@ public class InvoiceController implements InvoiceControllerApi {
                     .body("PDF alınırken bir hata oluştu: " + e.getMessage());
         }
     }
+
 }
