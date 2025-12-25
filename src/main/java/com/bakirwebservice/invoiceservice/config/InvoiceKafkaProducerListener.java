@@ -1,4 +1,4 @@
-package com.bakirwebservice.invoiceservice.util;
+package com.bakirwebservice.invoiceservice.config;
 
 import com.bakirwebservice.invoiceservice.api.request.InvoiceRequest;
 import lombok.extern.slf4j.Slf4j;

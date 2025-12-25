@@ -1,4 +1,4 @@
-package com.bakirwebservice.invoiceservice.websocket.config;
+package com.bakirwebservice.invoiceservice.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

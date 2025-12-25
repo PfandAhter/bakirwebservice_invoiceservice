@@ -1,10 +1,11 @@
 package com.bakirwebservice.invoiceservice.service.invoice;
 
 
-import com.bakirwebservice.invoiceservice.api.request.InvoiceRequest;
+import com.bakirwebservice.invoiceservice.api.request.DynamicInvoiceRequest;
 import com.bakirwebservice.invoiceservice.api.response.InvoiceResponse;
 import com.bakirwebservice.invoiceservice.model.enums.InvoiceStatus;
-import com.bakirwebservice.invoiceservice.service.IInvoiceProducerService;
+import com.bakirwebservice.invoiceservice.model.enums.InvoiceType;
+import com.bakirwebservice.invoiceservice.service.InvoiceProducerService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -16,27 +17,24 @@ import java.util.UUID;
 @Service
 @Slf4j
 @AllArgsConstructor
-public class InvoiceProducerServiceImpl implements IInvoiceProducerService {
+public class InvoiceProducerServiceImpl implements InvoiceProducerService {
 
-    private static final String TOPIC = "invoice-service";
-
-    private final KafkaTemplate<String, InvoiceRequest> kafkaTemplate;
+    private final KafkaTemplate<String, DynamicInvoiceRequest> dynamicKafkaTemplate;
 
     private final LoadEstimatorService loadEstimatorService;
 
     @Override
-    public InvoiceResponse createInvoiceRequest(InvoiceRequest invoiceRequest){
-        String requestId = UUID.randomUUID().toString(); // TODO CHANGE IT...
+    public InvoiceResponse createDynamicInvoiceRequest(DynamicInvoiceRequest request){
         LocalDateTime estimatedCompletionTime = loadEstimatorService.estimateCompletionTime();
-        invoiceRequest.setRequestId(requestId);
+        //request.setInvoiceId(UUID.randomUUID().toString()); // TODO: CHANGE IT...
+        request.setInvoiceId(request.getData().get("transactionId").toString());
 
-        kafkaTemplate.send(TOPIC, invoiceRequest);
-        log.info("Invoice request sent to Kafka: " + invoiceRequest.getRequestId() + " Estimated completion time: " + estimatedCompletionTime);
+        dynamicKafkaTemplate.send("dynamic-invoice-service",request);
         return InvoiceResponse.builder()
-                .invoiceType(invoiceRequest.getInvoiceType())
-                .requestTime(invoiceRequest.getInvoiceRequestedDate())
+                .invoiceType(InvoiceType.valueOf(request.getInvoiceType()))
+                .requestTime(request.getDate())
                 .estimatedCompletionDate(estimatedCompletionTime)
                 .invoiceStatus(InvoiceStatus.PENDING)
-                .requestId(requestId).build();
+                .requestId(request.getInvoiceId()).build();
     }
 }
