@@ -1,14 +1,12 @@
 package com.bakirwebservice.invoiceservice.service.invoice;
 
 
+import com.bakirwebservice.invoiceservice.api.request.DynamicInvoiceRequest;
 import com.bakirwebservice.invoiceservice.api.request.InvoiceRequest;
-import com.bakirwebservice.invoiceservice.model.enums.InvoiceType;
+import com.bakirwebservice.invoiceservice.model.enums.InvoiceStatus;
 import com.bakirwebservice.invoiceservice.model.PDFContentData;
-import com.bakirwebservice.invoiceservice.model.entity.PurchaseInvoice;
-import com.bakirwebservice.invoiceservice.service.IInvoiceConsumerService;
 import com.bakirwebservice.invoiceservice.service.cache.DistributedCacheService;
 import com.bakirwebservice.invoiceservice.service.pdf.PDFEncryptionServiceImpl;
-import com.bakirwebservice.invoiceservice.service.pdf.PDFGeneratorService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -19,15 +17,13 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class InvoiceConsumerService implements IInvoiceConsumerService {
-
-    private final PDFGeneratorService generatorService;
+public class InvoiceConsumerService implements com.bakirwebservice.invoiceservice.service.InvoiceConsumerService {
 
     private final PDFEncryptionServiceImpl encryptionService;
 
     private final DistributedCacheService cacheService;
 
-    private final InvoiceFactory invoiceFactory;
+    private final InvoiceServiceRegistry invoiceServiceRegistry;
 
     private static final String TOPIC = "invoice-service";
 
@@ -38,8 +34,9 @@ public class InvoiceConsumerService implements IInvoiceConsumerService {
     public void consumeInvoice(InvoiceRequest invoiceRequest){
         try {
             log.info("Consumed invoice: {}", invoiceRequest);
-            byte[] pdf = invoiceFactory.createInvoice(invoiceRequest);
+            //byte[] pdf = invoiceFactory.createInvoice(invoiceRequest);
 
+            byte[] pdf = null;
             PDFEncryptionServiceImpl.EncryptedData data = encryptionService.encryptPDF(pdf,invoiceRequest.getPassword());
             PDFContentData contentData = new PDFContentData(data.data(), data.salt());
             cacheService.cachePDF(invoiceRequest.getRequestId(),contentData);
@@ -47,6 +44,28 @@ public class InvoiceConsumerService implements IInvoiceConsumerService {
             log.info("PDF is generated and encrypted successfully requestId: {}", invoiceRequest.getRequestId());
         }catch (Exception e){
             log.error("Error in consuming invoice: {}", e.getMessage());
+        }
+    }
+
+    @KafkaListener(topics = "dynamic-invoice-service",
+            groupId = "dynamic-invoice-processor-group",
+            containerFactory = "dynamicInvoiceRequestConcurrentKafkaListenerContainerFactory")
+    public void consumeDynamicInvoice(DynamicInvoiceRequest request){
+        try {
+            log.info("Consumed dynamic invoice: {}", request);
+            InvoiceServiceHandler service = invoiceServiceRegistry.getService(request.getInvoiceType());
+            byte[] pdf = service.execute(request.getData());
+            PDFEncryptionServiceImpl.EncryptedData data = encryptionService.encryptPDF(pdf,request.getUserId());
+            PDFContentData contentData = new PDFContentData(data.data(), data.salt());
+
+            request.getData().put("invoiceId", request.getInvoiceId());
+            request.getData().put("invoiceStatus", InvoiceStatus.COMPLETED.toString());
+            service.updateStatus(request.getData());
+            cacheService.cachePDF(request.getInvoiceId(),contentData);
+
+            log.info("Dynamic PDF is generated and encrypted successfully requestId: {}", request.getInvoiceId());
+        }catch (Exception e){
+            log.error("Error in consuming dynamic invoice: {}", e.getMessage());
         }
     }
 

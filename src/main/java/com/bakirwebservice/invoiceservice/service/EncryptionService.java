@@ -3,7 +3,7 @@ package com.bakirwebservice.invoiceservice.service;
 import com.bakirwebservice.invoiceservice.exceptions.EncryptionException;
 import com.bakirwebservice.invoiceservice.service.pdf.PDFEncryptionServiceImpl;
 
-public interface IPDFEncryptionService {
+public interface EncryptionService {
 
     PDFEncryptionServiceImpl.EncryptedData encryptPDF (byte[] pdfContent, String password) throws EncryptionException;
 
