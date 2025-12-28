@@ -24,9 +24,6 @@ public interface InvoiceControllerApi {
     @PostMapping(path = "/get/v2")
     ResponseEntity<GetInvoicePDFResponse> getInvoice(@RequestBody GetInvoicePDFRequest request);
 
-    @PostMapping(path = "/get/analysis-report")
-    ResponseEntity<>
-
     @PostMapping(path = "/generate")
     ResponseEntity<InvoiceResponse> generateInvoice(@RequestBody DynamicInvoiceRequest request);
 }
