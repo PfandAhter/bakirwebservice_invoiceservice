@@ -1,5 +1,7 @@
 package com.bakirwebservice.invoiceservice.service.invoice;
 
+import com.bakirwebservice.invoiceservice.api.client.AnalysisServiceClient;
+import com.bakirwebservice.invoiceservice.api.request.UpdateAnalysisInvoiceIdRequest;
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.*;
 import com.itextpdf.text.pdf.draw.LineSeparator;
@@ -17,6 +19,8 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class TransactionAnalysisReportInvoice implements InvoiceServiceHandler {
+
+    private final AnalysisServiceClient analysisServiceClient;
 
     // Renk Paleti
     private static final BaseColor PRIMARY_COLOR = new BaseColor(16, 97, 196);
@@ -87,7 +91,11 @@ public class TransactionAnalysisReportInvoice implements InvoiceServiceHandler {
 
     @Override
     public void updateStatus(Map<String, Object> parameters) {
-        // Analiz raporları için status güncellemesi gerekirse implement edilebilir
+        String analysisReportId = (String) parameters.get("analysisReportId");
+        String invoiceId = (String) parameters.get("invoiceId");
+
+        analysisServiceClient.updateAnalyzeInvoiceId
+                (new UpdateAnalysisInvoiceIdRequest(analysisReportId, invoiceId));
     }
 
     private void addHeader(Document document) throws Exception {
