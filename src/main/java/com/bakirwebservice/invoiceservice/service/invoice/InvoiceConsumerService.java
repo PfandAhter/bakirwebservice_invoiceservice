@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -32,7 +33,8 @@ public class InvoiceConsumerService implements com.bakirwebservice.invoiceservic
             groupId = "invoice-processor-group",
             containerFactory = "invoiceKafkaListenerContainerFactory")
     public void consumeInvoice(InvoiceRequest invoiceRequest){
-        try {
+
+        /*try {
             log.info("Consumed invoice: {}", invoiceRequest);
             //byte[] pdf = invoiceFactory.createInvoice(invoiceRequest);
 
@@ -44,7 +46,7 @@ public class InvoiceConsumerService implements com.bakirwebservice.invoiceservic
             log.info("PDF is generated and encrypted successfully requestId: {}", invoiceRequest.getRequestId());
         }catch (Exception e){
             log.error("Error in consuming invoice: {}", e.getMessage());
-        }
+        }*/
     }
 
     @KafkaListener(topics = "dynamic-invoice-service",
@@ -56,11 +58,12 @@ public class InvoiceConsumerService implements com.bakirwebservice.invoiceservic
             InvoiceServiceHandler service = invoiceServiceRegistry.getService(request.getInvoiceType());
             byte[] pdf = service.execute(request.getData());
             PDFEncryptionServiceImpl.EncryptedData data = encryptionService.encryptPDF(pdf,request.getUserId());
-            PDFContentData contentData = new PDFContentData(data.data(), data.salt());
+            PDFContentData contentData = new PDFContentData(data.data(), data.salt(), request.getInvoiceType(), request.getUserId());
 
             request.getData().put("invoiceId", request.getInvoiceId());
             request.getData().put("invoiceStatus", InvoiceStatus.COMPLETED.toString());
-            service.updateStatus(request.getData());
+//            service.updateStatus(request.getData());
+            updateStatusSafe(service,request.getData());
             cacheService.cachePDF(request.getInvoiceId(),contentData);
 
             log.info("Dynamic PDF is generated and encrypted successfully requestId: {}", request.getInvoiceId());
@@ -77,6 +80,15 @@ public class InvoiceConsumerService implements com.bakirwebservice.invoiceservic
             return Optional.of(pdf);
         }else {
             return Optional.empty();
+        }
+    }
+
+    private void updateStatusSafe(InvoiceServiceHandler service, Map<String,Object> data){
+        try{
+            log.info("Updating invoice status with data: {}", data.get("invoiceId"));
+            service.updateStatus(data);
+        }catch(Exception e){
+            log.error("Error in updating invoice status: {}", e.getMessage());
         }
     }
 }

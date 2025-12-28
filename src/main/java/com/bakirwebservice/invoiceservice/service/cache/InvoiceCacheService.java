@@ -4,6 +4,7 @@ package com.bakirwebservice.invoiceservice.service.cache;
 import com.bakirwebservice.invoiceservice.exceptions.CacheFailedException;
 import com.bakirwebservice.invoiceservice.model.PDFContentData;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -15,6 +16,7 @@ import java.util.Optional;
 import java.util.Set;
 
 @Service
+@Slf4j
 public class InvoiceCacheService {
 
     @Autowired
@@ -25,6 +27,7 @@ public class InvoiceCacheService {
     public void cachePDF(String requestId, PDFContentData data){
         try {
             if (!redisTemplate.keys("*").contains(requestId)) {
+                log.info("Caching PDF with requestId: {}",requestId);
                 redisTemplate.opsForValue().set(requestId, data, CACHE_DURATION);
             }
         }catch (Exception e){

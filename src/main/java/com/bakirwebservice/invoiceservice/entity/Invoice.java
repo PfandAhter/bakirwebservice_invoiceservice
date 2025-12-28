@@ -1,4 +1,4 @@
-package com.bakirwebservice.invoiceservice.model.entity;
+package com.bakirwebservice.invoiceservice.entity;
 
 
 import com.bakirwebservice.invoiceservice.model.enums.InvoiceType;
