@@ -6,25 +6,25 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import static com.bakirwebservice.invoiceservice.constants.HeaderKey.*;
 
 @Component
-@RequiredArgsConstructor
 public class FeignInterceptor implements RequestInterceptor {
-
-    private final HttpServletRequest request;
 
     @Override
     public void apply(RequestTemplate template) {
         String traceId = MDC.get("traceId");
-
         if (traceId != null) {
-            template.header(CORRELATION_ID, traceId);
-            template.header(USER_ID, request.getHeader(USER_ID));
-            template.header(USER_EMAIL, request.getHeader(USER_EMAIL));
-            template.header(USER_ROLE, request.getHeader(USER_ROLE));
-            template.header(AUTHORIZATION_TOKEN, request.getHeader(AUTHORIZATION_TOKEN));
+            template.header("X-Correlation-ID", traceId);
+        }
+
+        RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
+        if (requestAttributes != null) {
+            HttpServletRequest request = ((ServletRequestAttributes) requestAttributes).getRequest();
         }
     }
 }

@@ -1,5 +1,5 @@
 package com.bakirwebservice.invoiceservice.service;
 
-public interface IApiKeyDecryptionService {
+public interface APIKeyDecryptionService {
 
 }
