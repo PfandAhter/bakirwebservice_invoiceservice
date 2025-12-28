@@ -68,7 +68,7 @@ public class ServiceSetupAspect {
         pdfList.forEach(encryptedPDF -> {
             distributedCacheService.cachePDF(
                     encryptedPDF.getRequestId(),
-                    new PDFContentData(encryptedPDF.getPdf(), encryptedPDF.getSalt()));
+                    new PDFContentData(encryptedPDF.getPdf(), encryptedPDF.getSalt(), encryptedPDF.getPdfType(), encryptedPDF.getUserId()));
         });
     }
 }

@@ -1,16 +1,14 @@
-package com.bakirwebservice.invoiceservice.websocket.config;
+package com.bakirwebservice.invoiceservice.config;
 
+import com.bakirwebservice.invoiceservice.entity.ErrorCodes;
 import com.bakirwebservice.invoiceservice.model.CacheNames;
 import com.bakirwebservice.invoiceservice.model.PDFContentData;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.cache.RedisCacheManagerBuilderCustomizer;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisPassword;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
@@ -46,7 +44,6 @@ public class RedisConfiguration {
     @Value("${spring.data.redis.timeout}")
     private int timeout;
 
-
     @Bean
     public RedisCacheConfiguration cacheConfiguration() {
         return RedisCacheConfiguration
@@ -66,7 +63,6 @@ public class RedisConfiguration {
             builder.withCacheConfiguration(CacheNames.PDF_LIST, categoryList);
         };
     }
-
 
     @Bean
     public LettuceConnectionFactory redisConnectionFactory() {
@@ -98,4 +94,13 @@ public class RedisConfiguration {
         return template;
     }
 
+    @Bean
+    public RedisTemplate<String, ErrorCodes> redisTemplateErrorCode(LettuceConnectionFactory connectionFactory) {
+        RedisTemplate<String, ErrorCodes> template = new RedisTemplate<>();
+        template.setConnectionFactory(connectionFactory);
+        template.setKeySerializer(new StringRedisSerializer());
+        Jackson2JsonRedisSerializer<ErrorCodes> jsonSerializer = new Jackson2JsonRedisSerializer<>(ErrorCodes.class);
+        template.setValueSerializer(jsonSerializer);
+        return template;
+    }
 }
