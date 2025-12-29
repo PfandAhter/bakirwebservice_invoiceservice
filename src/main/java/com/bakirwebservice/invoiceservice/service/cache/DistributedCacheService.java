@@ -33,7 +33,15 @@ public class DistributedCacheService extends InvoiceCacheService{
                 Duration.ofDays(7)
         );
 
-        pdfRepository.save(new EncryptedPDF(requestId, pdfContent.pdfContent(), pdfContent.salt()));
+        pdfRepository.save(
+                EncryptedPDF.builder()
+                        .requestId(requestId)
+                        .pdf(pdfContent.pdfContent())
+                        .salt(pdfContent.salt())
+                        .pdfType(pdfContent.pdfType())
+                        .userId(pdfContent.userId())
+                        .build()
+        );
     }
 
     @Override
@@ -51,7 +59,7 @@ public class DistributedCacheService extends InvoiceCacheService{
 
             if (pdf.isPresent()) {
                 return Optional.ofNullable(
-                        new PDFContentData(pdf.get().getPdf(), pdf.get().getSalt())
+                        new PDFContentData(pdf.get().getPdf(), pdf.get().getSalt(), pdf.get().getPdfType(), pdf.get().getUserId())
                 );
             }
         }catch (Exception e){

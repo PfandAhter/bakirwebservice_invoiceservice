@@ -1,4 +1,4 @@
-package com.bakirwebservice.invoiceservice.model.dto;
+package com.bakirwebservice.invoiceservice.api.dto;
 
 import lombok.Getter;
 import lombok.Setter;

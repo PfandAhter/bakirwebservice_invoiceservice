@@ -1,17 +1,14 @@
-package com.bakirwebservice.invoiceservice.rest.controller;
+package com.bakirwebservice.invoiceservice.controller;
 
 
-import com.bakirwebservice.invoiceservice.api.request.CreatePurchaseInvoiceRequest;
-import com.bakirwebservice.invoiceservice.api.request.CreateTransactionInvoiceRequest;
-import com.bakirwebservice.invoiceservice.api.request.InvoiceRequest;
+import com.bakirwebservice.invoiceservice.api.request.*;
 import com.bakirwebservice.invoiceservice.api.response.CreateInvoicePDFResponse;
-import com.bakirwebservice.invoiceservice.api.response.InvoiceStatusUpdate;
-import com.bakirwebservice.invoiceservice.model.enums.InvoiceStatus;
-import com.bakirwebservice.invoiceservice.model.enums.InvoiceType;
-import com.bakirwebservice.invoiceservice.rest.api.InvoiceControllerApi;
-import com.bakirwebservice.invoiceservice.service.IInvoiceConsumerService;
-import com.bakirwebservice.invoiceservice.service.IInvoiceProducerService;
-import com.bakirwebservice.invoiceservice.service.IMapperService;
+import com.bakirwebservice.invoiceservice.api.response.GetInvoicePDFResponse;
+import com.bakirwebservice.invoiceservice.api.response.InvoiceResponse;
+import com.bakirwebservice.invoiceservice.api.InvoiceControllerApi;
+import com.bakirwebservice.invoiceservice.service.InvoiceConsumerService;
+import com.bakirwebservice.invoiceservice.service.InvoiceProducerService;
+import com.bakirwebservice.invoiceservice.service.MapperService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -31,19 +28,19 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class InvoiceController implements InvoiceControllerApi {
 
-    private final IInvoiceConsumerService consumerService;
+    private final InvoiceConsumerService consumerService;
 
-    private final IInvoiceProducerService producerService;
+    private final InvoiceProducerService producerService;
 
     private final RetryTemplate retryTemplate;
 
     private final SimpMessagingTemplate webSocket;
 
-    private final IMapperService mapperService;
+    private final MapperService mapperService;
 
     @Override
     public ResponseEntity<CreateInvoicePDFResponse> createPurchaseInvoice(CreatePurchaseInvoiceRequest request) {
-        InvoiceRequest invoiceRequest = mapperService.map(request, InvoiceRequest.class);
+        InvoiceRequest invoiceRequest = mapperService.map(request.getInvoice(), InvoiceRequest.class);
 
         HashMap<String,Object> testHm = new HashMap<>();
         testHm.put("items",request.getInvoice().getItems());
@@ -53,9 +50,9 @@ public class InvoiceController implements InvoiceControllerApi {
         invoiceRequest.setDetails(testHm);
 
 
-        CreateInvoicePDFResponse response = mapperService.map(producerService.createInvoiceRequest(invoiceRequest), CreateInvoicePDFResponse.class);
 
-        return ResponseEntity.ok(response);
+        return null;
+//        return ResponseEntity.ok(response);
         /*return retryTemplate.execute(context -> {
             InvoiceRequest invoiceRequest = mapperService.map(request, InvoiceRequest.class);
             //invoiceRequest.getInvoice().setInvoiceType(InvoiceType.PURCHASE);
@@ -78,13 +75,6 @@ public class InvoiceController implements InvoiceControllerApi {
     }
 
     @Override
-    public ResponseEntity<CreateInvoicePDFResponse> testCreateInvoice(InvoiceRequest invoiceRequest) {
-
-
-        return null;
-    }
-
-    @Override
     public ResponseEntity<?> getInvoicePDF(String requestId, String password) {
         try {
             Optional<byte[]> cachePDF = consumerService.getInvoicePdf(requestId,password);
@@ -103,8 +93,35 @@ public class InvoiceController implements InvoiceControllerApi {
             }
         }catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("PDF alınırken bir hata oluştu: " + e.getMessage());
+                    .body("Got error while getting PDF : " + e.getMessage());
         }
     }
 
+    @Override
+    public ResponseEntity<GetInvoicePDFResponse> getInvoice(GetInvoicePDFRequest request) {
+        try {
+            Optional<byte[]> cachePDF = consumerService.getInvoicePdf(request.getId(),request.getUserId());
+//            return pdf.map(ResponseEntity::ok).orElse(null);
+            if(cachePDF.isPresent()){
+                byte[] pdf = cachePDF.get();
+
+                HttpHeaders httpHeaders = new HttpHeaders();
+                httpHeaders.setContentType(MediaType.APPLICATION_PDF);
+                httpHeaders.setContentDispositionFormData("filename", "invoice.pdf");
+
+                return ResponseEntity.ok(new GetInvoicePDFResponse(pdf));
+            }else {
+                return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE)
+                        .body(new GetInvoicePDFResponse(null));
+            }
+        }catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new GetInvoicePDFResponse(null));
+        }
+    }
+
+    @Override
+    public ResponseEntity<InvoiceResponse> generateInvoice(DynamicInvoiceRequest request) {
+        return ResponseEntity.ok(producerService.createDynamicInvoiceRequest(request));
+    }
 }

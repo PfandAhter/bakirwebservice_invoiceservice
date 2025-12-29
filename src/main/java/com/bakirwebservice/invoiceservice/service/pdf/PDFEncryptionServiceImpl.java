@@ -1,7 +1,7 @@
 package com.bakirwebservice.invoiceservice.service.pdf;
 
 import com.bakirwebservice.invoiceservice.exceptions.EncryptionException;
-import com.bakirwebservice.invoiceservice.service.IPDFEncryptionService;
+import com.bakirwebservice.invoiceservice.service.EncryptionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.ByteBuffer;
@@ -19,9 +19,9 @@ import java.util.regex.Pattern;
 
 @Service
 @Slf4j
-public class PDFEncryptionServiceImpl implements IPDFEncryptionService {
+public class PDFEncryptionServiceImpl implements EncryptionService {
 
-    private static final String ALGORITHM = "AES/CBC/PKCS5Padding";
+    private static final String ALGORITHM = "AES/GCM/NoPadding";
 
     private static final int ITERATION_COUNT = 65536;
 
@@ -30,6 +30,8 @@ public class PDFEncryptionServiceImpl implements IPDFEncryptionService {
     private static final int SALT_LENGTH = 32;
 
     private static final int IV_LENGTH = 16;
+
+    private static final int TAG_LENGTH = 128; // GCM authentication tag length in bits
 
     private static final String PASSWORD_PATTERN = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{8,}$";
 
@@ -42,17 +44,22 @@ public class PDFEncryptionServiceImpl implements IPDFEncryptionService {
 
     @Override
     public EncryptedData encryptPDF (byte[] pdfContent, String password) throws EncryptionException{
-        validatePassword(password);
+        //validatePassword(password);
 
         try{
             byte[] salt = generateSalt();
             SecretKey key = deriveKey(password, salt);
-
-            Cipher cipher = Cipher.getInstance(ALGORITHM);
-            cipher.init(Cipher.ENCRYPT_MODE,key);
+            SecureRandom random = new SecureRandom();
 
             byte[] iv= new byte[IV_LENGTH];
-            iv = cipher.getIV();
+            random.nextBytes(iv);
+//            iv = cipher.getIV();
+
+            Cipher cipher = Cipher.getInstance(ALGORITHM);
+            GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(TAG_LENGTH, iv); // 128-bit authentication tag
+
+
+            cipher.init(Cipher.ENCRYPT_MODE,key, gcmParameterSpec);
             byte[] encryptedContent = cipher.doFinal(pdfContent);
             ByteBuffer byteBuffer = ByteBuffer.allocate(IV_LENGTH + encryptedContent.length);
             byteBuffer.put(iv);
@@ -67,7 +74,7 @@ public class PDFEncryptionServiceImpl implements IPDFEncryptionService {
 
     @Override
     public byte[] decryptPDF(byte[] encryptedData,String password, String saltString) throws EncryptionException{
-        validatePassword(password);
+        //validatePassword(password);
 
         try{
             byte[] salt = Base64.getDecoder().decode(saltString);
@@ -85,7 +92,9 @@ public class PDFEncryptionServiceImpl implements IPDFEncryptionService {
             byteBuffer.get(encryptedContent);
 
             Cipher cipher = Cipher.getInstance(ALGORITHM);
-            cipher.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(iv));
+            GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(TAG_LENGTH, iv); // Use GCMParameterSpec instead of IvParameterSpec
+
+            cipher.init(Cipher.DECRYPT_MODE, key, gcmParameterSpec);
 
             return cipher.doFinal(encryptedContent);
         }catch (Exception e){
@@ -121,7 +130,7 @@ public class PDFEncryptionServiceImpl implements IPDFEncryptionService {
 
     private void validatePassword (String password) throws EncryptionException {
         if(password == null || password.isEmpty()){
-            throw new EncryptionException();
+            throw new EncryptionException("Password cannot be null or empty");
         }
 
         Pattern pattern = Pattern.compile(PASSWORD_PATTERN);

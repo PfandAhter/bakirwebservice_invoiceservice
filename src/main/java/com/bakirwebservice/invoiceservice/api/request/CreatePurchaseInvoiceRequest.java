@@ -1,7 +1,7 @@
 package com.bakirwebservice.invoiceservice.api.request;
 
 
-import com.bakirwebservice.invoiceservice.model.entity.PurchaseInvoice;
+import com.bakirwebservice.invoiceservice.entity.PurchaseInvoice;
 import lombok.Getter;
 import lombok.Setter;
 

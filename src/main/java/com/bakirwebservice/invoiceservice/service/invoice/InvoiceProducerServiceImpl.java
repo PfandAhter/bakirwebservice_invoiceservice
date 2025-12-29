@@ -26,8 +26,7 @@ public class InvoiceProducerServiceImpl implements InvoiceProducerService {
     @Override
     public InvoiceResponse createDynamicInvoiceRequest(DynamicInvoiceRequest request){
         LocalDateTime estimatedCompletionTime = loadEstimatorService.estimateCompletionTime();
-        //request.setInvoiceId(UUID.randomUUID().toString()); // TODO: CHANGE IT...
-        request.setInvoiceId(request.getData().get("transactionId").toString());
+        request.setInvoiceId(UUID.randomUUID().toString());
 
         dynamicKafkaTemplate.send("dynamic-invoice-service",request);
         return InvoiceResponse.builder()
