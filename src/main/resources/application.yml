@@ -14,16 +14,16 @@ encryption:
 feign:
   client:
     analysis-service:
-      url: ${ANALYSIS_SERVICE_URL:http://localhost:8082/api/v1}
-      updateAnalyzeInvoiceId: ${ANALYSIS_SERVICE_ANALYZE_TRANSACTION_ENDPOINT:/analyze/transaction}
+      url: ${ANALYSIS_SERVICE_URL:http://localhost:8082}/api/v1
+      updateAnalyzeInvoiceId: /analyze/transaction
     parameter-service:
-      url: ${PARAMETER_SERVICE_URL:http://localhost:8086/api/v1}
-      getByCode: ${PARAMETER_SERVICE_GET_BY_CODE_ENDPOINT:/error-codes/error-code}
-      logError: ${PARAMETER_SERVICE_LOG_ERROR_ENDPOINT:/log/error}
-      getAllErrorCodes: ${PARAMETER_SERVICE_GET_ALL_ERROR_CODES_ENDPOINT:/error-codes/error-code/all}
+      url: ${PARAMETER_SERVICE_URL}/api/v1
+      getByCode: /error-codes/error-code
+      logError: /log/error
+      getAllErrorCodes: /error-codes/error-code/all
     transaction-service:
-      url: ${TRANSACTION_SERVICE_URL:http://localhost:8083/api/v1}
-      updateTransactionInvoiceStatus: ${TRANSACTION_SERVICE_UPDATE_INVOICE_STATUS_ENDPOINT:/transaction/update-invoice-status}
+      url: ${TRANSACTION_SERVICE_URL}/api/v1
+      updateTransactionInvoiceStatus: /transaction/update-invoice-status
 
 spring:
   datasource:
