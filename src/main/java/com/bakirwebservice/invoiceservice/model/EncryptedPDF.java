@@ -33,7 +33,7 @@ public class EncryptedPDF {
     @Column(name = "salt")
     private String salt;
 
-    @Column(nullable = false, columnDefinition = "datetime(6) default CURRENT_TIMESTAMP(6)")
+    @Column(nullable = false, columnDefinition = "datetime(6) default CURRENT_TIMESTAMP(6)",updatable = false)
     @org.hibernate.annotations.CreationTimestamp
     private LocalDateTime createdAt;
 

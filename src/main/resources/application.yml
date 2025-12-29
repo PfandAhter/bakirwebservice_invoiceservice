@@ -14,7 +14,7 @@ encryption:
 feign:
   client:
     analysis-service:
-      url: ${ANALYSIS_SERVICE_URL:http://localhost:8082}/api/v1
+      url: ${ANALYSIS_SERVICE_URL}/api/v1
       updateAnalyzeInvoiceId: /analyze/transaction
     parameter-service:
       url: ${PARAMETER_SERVICE_URL}/api/v1
