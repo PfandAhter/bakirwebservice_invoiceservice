@@ -8,6 +8,20 @@ logging:
   pattern:
     console: '%clr(%d{yyyy-MM-dd HH:mm:ss}){faint} %clr(%-5level) %clr([%X{traceId}]){yellow} %clr(%logger{36}){cyan} - %msg%n'
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, metrics, prometheus, circuitbreakers, circuitbreakerevents
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      enabled: true
+    tags:
+      application: ${spring.application.name}
+
 encryption:
   pepper: ${ENCRYPTION_PEPPER}
 
