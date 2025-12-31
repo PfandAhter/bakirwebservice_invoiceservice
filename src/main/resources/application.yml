@@ -29,7 +29,7 @@ feign:
   client:
     analysis-service:
       url: ${ANALYSIS_SERVICE_URL}/api/v1
-      updateAnalyzeInvoiceId: /analyze/transaction
+      updateAnalyzeInvoiceId: /reports/invoice/update
     parameter-service:
       url: ${PARAMETER_SERVICE_URL}/api/v1
       getByCode: /error-codes/error-code
