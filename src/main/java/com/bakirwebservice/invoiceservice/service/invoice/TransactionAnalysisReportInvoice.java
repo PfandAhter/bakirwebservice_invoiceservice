@@ -85,7 +85,7 @@ public class TransactionAnalysisReportInvoice implements InvoiceServiceHandler {
 
             return out.toByteArray();
         } catch (Exception e) {
-            throw new RuntimeException("PDF oluşturulurken hata: " + e.getMessage(), e);
+            throw new RuntimeException("PDF olusturulurken hata: " + e.getMessage(), e);
         }
     }
 
@@ -122,7 +122,8 @@ public class TransactionAnalysisReportInvoice implements InvoiceServiceHandler {
         titleCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
         titleCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
 
-        Paragraph title = new Paragraph("İŞLEM ANALİZ RAPORU", getTurkishFont(14, Font.BOLD, TEXT_SECONDARY));
+        // TR -> EN
+        Paragraph title = new Paragraph("ISLEM ANALIZ RAPORU", getTurkishFont(14, Font.BOLD, TEXT_SECONDARY));
         title.setAlignment(Element.ALIGN_RIGHT);
 
         Paragraph subTitle = new Paragraph("Rapor No: RPT-" + System.currentTimeMillis(),
@@ -164,11 +165,12 @@ public class TransactionAnalysisReportInvoice implements InvoiceServiceHandler {
         cell.setBackgroundColor(INFO_BG);
         cell.setPadding(15);
 
-        // AI İkonu ve Başlık
-        Paragraph header = new Paragraph("🤖 AI Analiz Özeti", getTurkishFont(12, Font.BOLD, INFO_TEXT));
+        // AI İkonu ve Başlık (TR -> EN)
+        Paragraph header = new Paragraph("AI Analiz Ozeti", getTurkishFont(12, Font.BOLD, INFO_TEXT));
         header.setSpacingAfter(10);
 
-        String aiSummary = parameters.get("aiSummary").toString();
+        // Dinamik metni normalize et
+        String aiSummary = normalizeString(parameters.get("aiSummary").toString());
         Paragraph summary = new Paragraph(aiSummary, getTurkishFont(10, Font.NORMAL, TEXT_PRIMARY));
         summary.setLeading(16f);
 
@@ -179,7 +181,8 @@ public class TransactionAnalysisReportInvoice implements InvoiceServiceHandler {
     }
 
     private void addStatisticsSection(Document document, Map<String, Object> parameters) throws Exception {
-        Paragraph sectionTitle = new Paragraph("📊 Özet İstatistikler", getTurkishFont(12, Font.BOLD, TEXT_PRIMARY));
+        // TR -> EN
+        Paragraph sectionTitle = new Paragraph("Ozet Istatistikler", getTurkishFont(12, Font.BOLD, TEXT_PRIMARY));
         sectionTitle.setSpacingAfter(10);
         document.add(sectionTitle);
 
@@ -187,22 +190,24 @@ public class TransactionAnalysisReportInvoice implements InvoiceServiceHandler {
         table.setWidthPercentage(100);
         table.setWidths(new float[]{1, 1, 1, 1});
 
-        // İşlem Sayısı
-        addStatCard(table, "Toplam İşlem", parameters.get("transactionCount").toString(), ACCENT_COLOR, PRIMARY_COLOR);
+        // İşlem Sayısı -> Islem Sayisi
+        addStatCard(table, "Toplam Islem", parameters.get("transactionCount").toString(), ACCENT_COLOR, PRIMARY_COLOR);
 
-        // Riskli İşlem
+        // Riskli İşlem -> Riskli Islem
         int highRisk = Integer.parseInt(parameters.get("highRiskTransactionCount").toString());
         BaseColor riskBg = highRisk > 0 ? RISK_HIGH_BG : RISK_LOW_BG;
         BaseColor riskText = highRisk > 0 ? RISK_HIGH_TEXT : RISK_LOW_TEXT;
-        addStatCard(table, "Riskli İşlem", String.valueOf(highRisk), riskBg, riskText);
+        addStatCard(table, "Riskli Islem", String.valueOf(highRisk), riskBg, riskText);
 
         // Giden Tutar
         String outgoing = formatAmount(parameters.get("totalOutgoingAmount").toString());
-        addStatCard(table, "Giden Toplam", outgoing + " ₺", new BaseColor(254, 226, 226), RISK_HIGH_TEXT);
+        // ₺ sembolü yerine TL veya T yazmak daha güvenli olabilir ama font destekliyorsa kalabilir.
+        // Garanti olsun diye TL yazıyorum.
+        addStatCard(table, "Giden Toplam", outgoing + " TL", new BaseColor(254, 226, 226), RISK_HIGH_TEXT);
 
         // Gelen Tutar
         String incoming = formatAmount(parameters.get("totalIncomingAmount").toString());
-        addStatCard(table, "Gelen Toplam", incoming + " ₺", RISK_LOW_BG, RISK_LOW_TEXT);
+        addStatCard(table, "Gelen Toplam", incoming + " TL", RISK_LOW_BG, RISK_LOW_TEXT);
 
         document.add(table);
     }
@@ -227,7 +232,8 @@ public class TransactionAnalysisReportInvoice implements InvoiceServiceHandler {
     }
 
     private void addRiskAnalysisSection(Document document, Map<String, Object> parameters) throws Exception {
-        Paragraph sectionTitle = new Paragraph("⚠️ Risk Değerlendirmesi", getTurkishFont(12, Font.BOLD, TEXT_PRIMARY));
+        // TR -> EN
+        Paragraph sectionTitle = new Paragraph("Risk Degerlendirmesi", getTurkishFont(12, Font.BOLD, TEXT_PRIMARY));
         sectionTitle.setSpacingAfter(10);
         document.add(sectionTitle);
 
@@ -255,13 +261,14 @@ public class TransactionAnalysisReportInvoice implements InvoiceServiceHandler {
         @SuppressWarnings("unchecked")
         List<String> reasons = (List<String>) parameters.get("dominantRiskReasons");
         if (reasons != null && !reasons.isEmpty()) {
-            Paragraph reasonsTitle = new Paragraph("Tespit Edilen Risk Faktörleri:",
+            Paragraph reasonsTitle = new Paragraph("Tespit Edilen Risk Faktorleri:",
                     getTurkishFont(10, Font.BOLD, TEXT_PRIMARY));
             reasonsTitle.setSpacingAfter(5);
             document.add(reasonsTitle);
 
             for (String reason : reasons) {
-                Paragraph item = new Paragraph("• " + reason, getTurkishFont(9, Font.NORMAL, TEXT_SECONDARY));
+                // Dinamik veriyi normalize et
+                Paragraph item = new Paragraph("- " + normalizeString(reason), getTurkishFont(9, Font.NORMAL, TEXT_SECONDARY));
                 item.setIndentationLeft(10);
                 document.add(item);
             }
@@ -272,7 +279,7 @@ public class TransactionAnalysisReportInvoice implements InvoiceServiceHandler {
         List<String> flaggedIds = (List<String>) parameters.get("flaggedTransactionIds");
         if (flaggedIds != null && !flaggedIds.isEmpty()) {
             document.add(new Paragraph("\n"));
-            Paragraph flaggedTitle = new Paragraph("İşaretlenen İşlem ID'leri:",
+            Paragraph flaggedTitle = new Paragraph("Isaretlenen Islem ID'leri:",
                     getTurkishFont(10, Font.BOLD, RISK_HIGH_TEXT));
             flaggedTitle.setSpacingAfter(5);
             document.add(flaggedTitle);
@@ -289,7 +296,8 @@ public class TransactionAnalysisReportInvoice implements InvoiceServiceHandler {
         List<Map<String, Object>> patterns = (List<Map<String, Object>>) parameters.get("detectedPatterns");
         if (patterns == null || patterns.isEmpty()) return;
 
-        Paragraph sectionTitle = new Paragraph("🔍 Tespit Edilen Kalıplar", getTurkishFont(12, Font.BOLD, TEXT_PRIMARY));
+        // TR -> EN
+        Paragraph sectionTitle = new Paragraph("Tespit Edilen Kaliplar", getTurkishFont(12, Font.BOLD, TEXT_PRIMARY));
         sectionTitle.setSpacingAfter(10);
         document.add(sectionTitle);
 
@@ -297,14 +305,14 @@ public class TransactionAnalysisReportInvoice implements InvoiceServiceHandler {
         table.setWidthPercentage(100);
         table.setWidths(new float[]{50, 25, 25});
 
-        // Header
-        addTableHeader(table, "Kalıp Adı");
+        // Header (TR -> EN)
+        addTableHeader(table, "Kalip Adi");
         addTableHeader(table, "Ciddiyet");
-        addTableHeader(table, "Etkilenen İşlem");
+        addTableHeader(table, "Etkilenen Islem");
 
         // Rows
         for (Map<String, Object> pattern : patterns) {
-            addTableCell(table, pattern.get("patternName").toString(), false);
+            addTableCell(table, normalizeString(pattern.get("patternName").toString()), false);
 
             String severity = pattern.get("severity").toString();
             BaseColor[] colors = getRiskColors(severity);
@@ -328,7 +336,8 @@ public class TransactionAnalysisReportInvoice implements InvoiceServiceHandler {
         List<Map<String, Object>> accounts = (List<Map<String, Object>>) parameters.get("accountSummaries");
         if (accounts == null || accounts.isEmpty()) return;
 
-        Paragraph sectionTitle = new Paragraph("💳 Hesap Özetleri", getTurkishFont(12, Font.BOLD, TEXT_PRIMARY));
+        // TR -> EN
+        Paragraph sectionTitle = new Paragraph("Hesap Ozetleri", getTurkishFont(12, Font.BOLD, TEXT_PRIMARY));
         sectionTitle.setSpacingAfter(10);
         document.add(sectionTitle);
 
@@ -340,13 +349,14 @@ public class TransactionAnalysisReportInvoice implements InvoiceServiceHandler {
 
             String iban = formatIBAN(account.get("iban").toString());
             addAccountRow(table, "IBAN", iban, true);
-            addAccountRow(table, "İşlem Sayısı", account.get("transactionCount").toString(), false);
-            addAccountRow(table, "Giden Tutar", formatAmount(account.get("outgoingAmount").toString()) + " ₺", false);
-            addAccountRow(table, "Gelen Tutar", formatAmount(account.get("incomingAmount").toString()) + " ₺", false);
+            // TR -> EN
+            addAccountRow(table, "Islem Sayisi", account.get("transactionCount").toString(), false);
+            addAccountRow(table, "Giden Tutar", formatAmount(account.get("outgoingAmount").toString()) + " TL", false);
+            addAccountRow(table, "Gelen Tutar", formatAmount(account.get("incomingAmount").toString()) + " TL", false);
 
             String netFlow = account.get("netFlow").toString();
             boolean isNegative = netFlow.startsWith("-");
-            addAccountRow(table, "Net Akış", formatAmount(netFlow) + " ₺", false, isNegative ? RISK_HIGH_TEXT : RISK_LOW_TEXT);
+            addAccountRow(table, "Net Akis", formatAmount(netFlow) + " TL", false, isNegative ? RISK_HIGH_TEXT : RISK_LOW_TEXT);
 
             document.add(table);
         }
@@ -402,15 +412,17 @@ public class TransactionAnalysisReportInvoice implements InvoiceServiceHandler {
         cell.setBorderColor(BORDER_COLOR);
         cell.setPaddingTop(15);
 
-        Paragraph p1 = new Paragraph("Bu rapor yapay zeka destekli analiz sistemi tarafından otomatik olarak oluşturulmuştur.",
+        // TR -> EN
+        Paragraph p1 = new Paragraph("Bu rapor yapay zeka destekli analiz sistemi tarafindan otomatik olarak olusturulmustur.",
                 getTurkishFont(8, Font.NORMAL, TEXT_SECONDARY));
         p1.setAlignment(Element.ALIGN_CENTER);
 
-        Paragraph p2 = new Paragraph("Oluşturulma: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")),
+        Paragraph p2 = new Paragraph("Olusturulma: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")),
                 getTurkishFont(8, Font.NORMAL, TEXT_SECONDARY));
         p2.setAlignment(Element.ALIGN_CENTER);
 
-        Paragraph p3 = new Paragraph("BakırBank A.Ş. • www.bakirbank.com.tr • 0850 123 45 67",
+        // TR -> EN
+        Paragraph p3 = new Paragraph("BakirBank A.S. • www.bakirbank.online • 0850 123 45 67",
                 getTurkishFont(8, Font.BOLD, TEXT_SECONDARY));
         p3.setAlignment(Element.ALIGN_CENTER);
         p3.setSpacingBefore(5);
@@ -425,13 +437,14 @@ public class TransactionAnalysisReportInvoice implements InvoiceServiceHandler {
     // Yardımcı Metodlar
     private Font getTurkishFont(float size, int style, BaseColor color) {
         try {
+            // Font bulunamazsa standart Helvetica kullanilacak, karakter sorunu yasamamak icin tum metinler Ingilizceye cevrildi.
             String fontPath = "fonts/FreeSans.ttf";
             ClassPathResource fontResource = new ClassPathResource(fontPath);
             if (fontResource.exists()) {
                 BaseFont bf = BaseFont.createFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
                 return new Font(bf, size, style, color);
             } else {
-                BaseFont bf = BaseFont.createFont(BaseFont.HELVETICA, "Cp1254", BaseFont.NOT_EMBEDDED);
+                BaseFont bf = BaseFont.createFont(BaseFont.HELVETICA, BaseFont.CP1252, BaseFont.NOT_EMBEDDED);
                 return new Font(bf, size, style, color);
             }
         } catch (Exception e) {
@@ -448,19 +461,21 @@ public class TransactionAnalysisReportInvoice implements InvoiceServiceHandler {
     }
 
     private String translateRiskLevel(String level) {
+        // TR -> EN
         switch (level.toUpperCase()) {
-            case "HIGH": return "YÜKSEK";
+            case "HIGH": return "YUKSEK";
             case "MEDIUM": return "ORTA";
-            case "LOW": return "DÜŞÜK";
+            case "LOW": return "DUSUK";
             default: return level;
         }
     }
 
     private String translateAnalysisRange(String range) {
+        // TR -> EN
         switch (range) {
-            case "LAST_7_DAYS": return "Son 7 Gün";
-            case "LAST_30_DAYS": return "Son 30 Gün";
-            case "LAST_90_DAYS": return "Son 90 Gün";
+            case "LAST_7_DAYS": return "Son 7 Gun";
+            case "LAST_30_DAYS": return "Son 30 Gun";
+            case "LAST_90_DAYS": return "Son 90 Gun";
             default: return range;
         }
     }
@@ -486,5 +501,23 @@ public class TransactionAnalysisReportInvoice implements InvoiceServiceHandler {
         } catch (Exception e) {
             return dateObj.toString();
         }
+    }
+
+    // YENI EKLENEN METOD: Gelen string icindeki Turkce karakterleri Ingilizce karsiliklarina cevirir
+    private String normalizeString(String input) {
+        if (input == null) return "";
+        return input
+                .replace("ğ", "g")
+                .replace("Ğ", "G")
+                .replace("ü", "u")
+                .replace("Ü", "U")
+                .replace("ş", "s")
+                .replace("Ş", "S")
+                .replace("ı", "i")
+                .replace("İ", "I")
+                .replace("ö", "o")
+                .replace("Ö", "O")
+                .replace("ç", "c")
+                .replace("Ç", "C");
     }
 }
