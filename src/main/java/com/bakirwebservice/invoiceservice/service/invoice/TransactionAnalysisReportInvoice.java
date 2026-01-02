@@ -2,6 +2,7 @@ package com.bakirwebservice.invoiceservice.service.invoice;
 
 import com.bakirwebservice.invoiceservice.api.client.AnalysisServiceClient;
 import com.bakirwebservice.invoiceservice.api.request.UpdateAnalysisInvoiceIdRequest;
+import com.bakirwebservice.invoiceservice.model.enums.InvoiceStatus;
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.*;
 import com.itextpdf.text.pdf.draw.LineSeparator;
@@ -95,7 +96,7 @@ public class TransactionAnalysisReportInvoice implements InvoiceServiceHandler {
         String invoiceId = (String) parameters.get("invoiceId");
 
         analysisServiceClient.updateAnalyzeInvoiceId
-                (new UpdateAnalysisInvoiceIdRequest(analysisReportId, invoiceId));
+                (new UpdateAnalysisInvoiceIdRequest(analysisReportId, invoiceId, InvoiceStatus.COMPLETED));
     }
 
     private void addHeader(Document document) throws Exception {
