@@ -94,9 +94,14 @@ public class TransactionAnalysisReportInvoice implements InvoiceServiceHandler {
     public void updateStatus(Map<String, Object> parameters) {
         String analysisReportId = (String) parameters.get("analysisReportId");
         String invoiceId = (String) parameters.get("invoiceId");
+        UpdateAnalysisInvoiceIdRequest request = new UpdateAnalysisInvoiceIdRequest();
+
+        request.setInvoiceId(invoiceId);
+        request.setAnalysisReportId(analysisReportId);
+        request.setStatus(InvoiceStatus.COMPLETED);
 
         analysisServiceClient.updateAnalyzeInvoiceId
-                (new UpdateAnalysisInvoiceIdRequest(analysisReportId, invoiceId, InvoiceStatus.COMPLETED));
+                (request);
     }
 
     private void addHeader(Document document) throws Exception {
@@ -455,29 +460,40 @@ public class TransactionAnalysisReportInvoice implements InvoiceServiceHandler {
 
     private BaseColor[] getRiskColors(String level) {
         switch (level.toUpperCase()) {
-            case "HIGH": return new BaseColor[]{RISK_HIGH_BG, RISK_HIGH_TEXT};
-            case "MEDIUM": return new BaseColor[]{RISK_MEDIUM_BG, RISK_MEDIUM_TEXT};
-            default: return new BaseColor[]{RISK_LOW_BG, RISK_LOW_TEXT};
+            case "HIGH":
+                return new BaseColor[]{RISK_HIGH_BG, RISK_HIGH_TEXT};
+            case "MEDIUM":
+                return new BaseColor[]{RISK_MEDIUM_BG, RISK_MEDIUM_TEXT};
+            default:
+                return new BaseColor[]{RISK_LOW_BG, RISK_LOW_TEXT};
         }
     }
 
     private String translateRiskLevel(String level) {
         // TR -> EN
         switch (level.toUpperCase()) {
-            case "HIGH": return "YUKSEK";
-            case "MEDIUM": return "ORTA";
-            case "LOW": return "DUSUK";
-            default: return level;
+            case "HIGH":
+                return "YUKSEK";
+            case "MEDIUM":
+                return "ORTA";
+            case "LOW":
+                return "DUSUK";
+            default:
+                return level;
         }
     }
 
     private String translateAnalysisRange(String range) {
         // TR -> EN
         switch (range) {
-            case "LAST_7_DAYS": return "Son 7 Gun";
-            case "LAST_30_DAYS": return "Son 30 Gun";
-            case "LAST_90_DAYS": return "Son 90 Gun";
-            default: return range;
+            case "LAST_7_DAYS":
+                return "Son 7 Gun";
+            case "LAST_30_DAYS":
+                return "Son 30 Gun";
+            case "LAST_90_DAYS":
+                return "Son 90 Gun";
+            default:
+                return range;
         }
     }
 
